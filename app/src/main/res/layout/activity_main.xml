@@ -55,6 +55,13 @@
             android:onClick="sendNoBug"
             android:text="打印多行" />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="printLine"
+            android:text="打印条型码" />
+
+
     </LinearLayout>
 
 

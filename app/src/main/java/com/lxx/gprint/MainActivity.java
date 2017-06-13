@@ -240,7 +240,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
-
+    /**
+     * 打印文字
+     */
     void sendReceipt3() {
         EscCommand esc = new EscCommand();
 
@@ -270,6 +272,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Bitmap b = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher);
         esc.addRastBitImage(b, 384, 0); // 打印图片
         esc.addText("第 " + i + " 份\n"); // 打印文字
+        esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER);
 
         Vector<Byte> datas = esc.getCommand(); // 发送数据
         byte[] bytes = GpUtils.ByteTo_byte(datas);
@@ -295,6 +298,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         esc.addText("Print QRcode\n"); // 打印文字
         esc.addSelectErrorCorrectionLevelForQRCode((byte) 0x31); // 设置纠错等级
         esc.addSelectSizeOfModuleForQRCode((byte) 8);// 设置qrcode模块大小
+        esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER);
         esc.addStoreQRCodeData("lixinxin");// 设置qrcode内容
         esc.addPrintQRCode();// 打印QRCode
         esc.addPrintAndLineFeed();
@@ -314,8 +318,38 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
     }
 
+    /**
+     * 条形码
+     *
+     * @param v
+     */
+    public void printLine(View v) {
+        EscCommand esc = new EscCommand();
+        esc.addPrintAndFeedLines((byte) 3);
+        esc.addSelectJustification(EscCommand.JUSTIFICATION.RIGHT);
+        esc.addSelectPrintingPositionForHRICharacters(EscCommand.HRI_POSITION.BELOW);
+        // 设置条码高度为 60 点
+        esc.addSetBarcodeHeight((byte) 60);
+        // 设置条码单元宽度为 1 点
+        esc.addSetBarcodeWidth((byte) 1);
+        // 打印 Code128 码
+        esc.addCODE128(esc.genCodeB("lixinxin"));
+        esc.addPrintAndLineFeed();
+        Vector<Byte> datas = esc.getCommand(); // 发送数据
+        byte[] bytes = GpUtils.ByteTo_byte(datas);
+        String str = Base64.encodeToString(bytes, Base64.DEFAULT);
+        int rel;
+        try {
+            rel = mGpService.sendEscCommand(0, str);
+            GpCom.ERROR_CODE r = GpCom.ERROR_CODE.values()[rel];
+            if (r != GpCom.ERROR_CODE.SUCCESS) {
+                Toast.makeText(getApplicationContext(), GpCom.getErrorText(r), Toast.LENGTH_SHORT).show();
+            }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
 
-
+    }
 
 
 }
