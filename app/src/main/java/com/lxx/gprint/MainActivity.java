@@ -292,10 +292,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         EscCommand esc = new EscCommand();
 
-        esc.addSelectErrorCorrectionLevelForQRCode((byte) 0x31); //设置纠错等级
-        esc.addSelectSizeOfModuleForQRCode((byte) 3);//设置qrcode模块大小
-        esc.addStoreQRCodeData("lixinxinlove");//设置qrcode内容
-        esc.addPrintQRCode();//打印QRCode
+        esc.addText("Print QRcode\n"); // 打印文字
+        esc.addSelectErrorCorrectionLevelForQRCode((byte) 0x31); // 设置纠错等级
+        esc.addSelectSizeOfModuleForQRCode((byte) 8);// 设置qrcode模块大小
+        esc.addStoreQRCodeData("lixinxin");// 设置qrcode内容
+        esc.addPrintQRCode();// 打印QRCode
         esc.addPrintAndLineFeed();
 
         Vector<Byte> datas = esc.getCommand(); // 发送数据
@@ -312,6 +313,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             e.printStackTrace();
         }
     }
+
+
+
 
 
 }
