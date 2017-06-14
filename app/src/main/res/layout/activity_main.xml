@@ -18,22 +18,16 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="startDiscovery"
-            android:text="扫描蓝牙设备" />
-
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="connPrint"
-            android:text="链接打印机" />
-
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
             android:onClick="testPrint"
             android:text="测试打印" />
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="closePortPrint"
+            android:text="断开蓝牙设备" />
+
 
     </LinearLayout>
 
@@ -60,6 +54,13 @@
             android:layout_height="wrap_content"
             android:onClick="printLine"
             android:text="打印条型码" />
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="printLine"
+            android:text="打印标签" />
 
 
     </LinearLayout>

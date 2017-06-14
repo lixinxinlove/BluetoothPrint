@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.lxx.gprint.R;
 
+import java.lang.reflect.Method;
 import java.util.List;
 
 /**
@@ -45,10 +46,11 @@ public class BluetoothDeviceAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
-        BluetoothDevice deview = getItem(position);
+        final BluetoothDevice device = getItem(position);
         if (convertView == null) {
             holder = new ViewHolder();
             convertView = View.inflate(mContext, R.layout.item_bluetooth_device_view, null);
+            holder.btn = (TextView) convertView.findViewById(R.id.btn);
             holder.textView = (TextView) convertView.findViewById(R.id.tv);
             holder.textStatus = (TextView) convertView.findViewById(R.id.tv_status);
 
@@ -58,19 +60,39 @@ public class BluetoothDeviceAdapter extends BaseAdapter {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        holder.textView.setText(deview.getName());
 
-        if (deview.getBondState() == BluetoothDevice.BOND_BONDED) {
+        holder.textView.setText(device.getName() + "--type=" + device.getType());
+
+        if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
             holder.textStatus.setText("已派对");
+            holder.btn.setVisibility(View.VISIBLE);
         } else {
             holder.textStatus.setText("");
+            holder.btn.setVisibility(View.INVISIBLE);
         }
+
+
+        holder.btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+                    //取消配对
+                    try {
+                        Method removeBondMethod = BluetoothDevice.class.getMethod("removeBond");
+                        removeBondMethod.invoke(device);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
 
 
         return convertView;
     }
 
     static class ViewHolder {
+        TextView btn;
         TextView textView;
         TextView textStatus;
     }

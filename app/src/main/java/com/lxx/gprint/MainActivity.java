@@ -1,7 +1,6 @@
 package com.lxx.gprint;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,8 +16,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.gprinter.aidl.GpService;
@@ -27,35 +24,21 @@ import com.gprinter.command.GpCom;
 import com.gprinter.command.GpUtils;
 import com.gprinter.io.GpDevice;
 import com.gprinter.service.GpPrintService;
-import com.lxx.gprint.adapter.BluetoothDeviceAdapter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import java.util.Vector;
 
-public class MainActivity extends AppCompatActivity implements AdapterView.OnItemClickListener {
+public class MainActivity extends AppCompatActivity {
 
-    private static final int REQUEST_ENABLE_BT = 100;
     private final String TAG = "MainActivity";
-    private ListView listView;
     private GpService mGpService = null;
     private PrinterServiceConnection conn = null;
-
-
-    private String MAC = "";   //蓝牙地址
-
     private BluetoothAdapter mBluetoothAdapter;
-    private Set<BluetoothDevice> pairedDevices;   //已经配对的蓝牙设备
-    private BluetoothDeviceAdapter adapter;
-    private List<BluetoothDevice> mData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        initView();
         initData();
 
         Log.e(TAG, "onCreate");
@@ -63,41 +46,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Intent intent = new Intent(this, GpPrintService.class);
         bindService(intent, conn, Context.BIND_AUTO_CREATE); // bindService
         registerBroadcast();
-        registerBluetoothBroadcast();
     }
 
     private void initData() {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        pairedDevices = mBluetoothAdapter.getBondedDevices();
-        if (pairedDevices.size() > 0) {
-            mData.addAll(pairedDevices);
-        }
-
-    }
-
-    private void initView() {
-        listView = (ListView) findViewById(R.id.list_view);
-        mData = new ArrayList<>();
-        adapter = new BluetoothDeviceAdapter(this, mData);
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(this);
-    }
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-        if (adapter.getItem(position).getBondState() == BluetoothDevice.BOND_BONDED) {
-            MAC = adapter.getItem(position).getAddress();
-        } else {
-            boolean f = adapter.getItem(position).createBond();
-            if (f) {
-                Toast.makeText(this, "派对成功", Toast.LENGTH_LONG).show();
-                MAC = adapter.getItem(position).getAddress();
-            } else {
-                Toast.makeText(this, "派对失败", Toast.LENGTH_LONG).show();
-            }
-        }
-
     }
 
     class PrinterServiceConnection implements ServiceConnection {
@@ -112,33 +64,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             mGpService = GpService.Stub.asInterface(service);
             Log.e(TAG, "绑定服务");
         }
-    }
-
-
-    /**
-     * 监听蓝牙设备
-     */
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            // When discovery finds a device
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Get the BluetoothDevice object from the Intent
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // Add the name and address to an array adapter to show in a ListView
-                mData.add(device);
-            }
-
-            adapter.mData = mData;
-            adapter.notifyDataSetChanged();
-        }
-    };
-    // Register the BroadcastReceiver
-
-    private void registerBluetoothBroadcast() {
-        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-        registerReceiver(mReceiver, filter);
-        // Don't forget to unregister during onDestroy
     }
 
 
@@ -160,19 +85,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 Log.e(TAG, "返回设备" + "type=" + type + "---id=" + id);
 
                 if (type == GpDevice.STATE_CONNECTING) {
-                    //    setProgressBarIndeterminateVisibility(true);
+
                 } else if (type == GpDevice.STATE_NONE) {
-                    ///   setProgressBarIndeterminateVisibility(false);
 
                 } else if (type == GpDevice.STATE_VALID_PRINTER) {
-                    //   setProgressBarIndeterminateVisibility(false);
 
                 } else if (type == GpDevice.STATE_INVALID_PRINTER) {
-                    //   setProgressBarIndeterminateVisibility(false);
+
                 }
             }
         }
     };
+
+
+    int printerConnectStatus = 0;
 
 
     /**
@@ -181,31 +107,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      * @param view
      */
     public void openBluetooth(View view) {
+        // getPrinterConnectStatus(0)
+
         if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-    }
+            Intent intent = new Intent(this, BluetoothListActivity.class);
+            startActivity(intent);
+        } else {
+            try {
+                printerConnectStatus = mGpService.getPrinterConnectStatus(0);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
 
 
-    /**
-     * 扫描蓝牙设备
-     *
-     * @param view
-     */
-    public void startDiscovery(View view) {
-        if (mBluetoothAdapter.isEnabled()) {
-            mBluetoothAdapter.startDiscovery();
-            mData.clear();
-        }
-    }
+            Log.e(TAG,"printerConnectStatus="+printerConnectStatus);
 
-
-    public void connPrint(View view) {
-        try {
-            mGpService.openPort(0, 4, MAC, 0);
-        } catch (RemoteException e) {
-            e.printStackTrace();
+            if (printerConnectStatus != GpDevice. STATE_CONNECTED) {
+                Intent intent = new Intent(this, BluetoothListActivity.class);
+                startActivity(intent);
+            }
         }
     }
 
@@ -218,23 +138,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
-            Toast.makeText(this, "蓝牙开启", Toast.LENGTH_SHORT);
-
-        } else if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_CANCELED) {
-            Toast.makeText(this, "蓝牙失败", Toast.LENGTH_SHORT);
+    public void closePortPrint(View view){
+        try {
+            mGpService.closePort(0);
+        } catch (RemoteException e) {
 
         }
     }
+
+
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         this.unregisterReceiver(PrinterStatusBroadcastReceiver);
-        this.unregisterReceiver(mReceiver);
         if (conn != null) {
             unbindService(conn); // unBindService
         }
@@ -245,7 +162,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      */
     void sendReceipt3() {
         EscCommand esc = new EscCommand();
-
         esc.addPrintQRCode();
         esc.addText("0000000000000000000\n1234567890\n123455333\n0000000000000000000"); // 打印文字
         Vector<Byte> datas = esc.getCommand(); // 发送数据
@@ -259,7 +175,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 Toast.makeText(getApplicationContext(), GpCom.getErrorText(r), Toast.LENGTH_SHORT).show();
             }
         } catch (RemoteException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -329,11 +244,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         esc.addSelectJustification(EscCommand.JUSTIFICATION.RIGHT);
         esc.addSelectPrintingPositionForHRICharacters(EscCommand.HRI_POSITION.BELOW);
         // 设置条码高度为 60 点
-        esc.addSetBarcodeHeight((byte) 60);
+        esc.addSetBarcodeHeight((byte) 100);
         // 设置条码单元宽度为 1 点
-        esc.addSetBarcodeWidth((byte) 1);
+        esc.addSetBarcodeWidth((byte) 2);
         // 打印 Code128 码
-        esc.addCODE128(esc.genCodeB("lixinxin"));
+        esc.addCODE128(esc.genCodeB("11001100"));
         esc.addPrintAndLineFeed();
         Vector<Byte> datas = esc.getCommand(); // 发送数据
         byte[] bytes = GpUtils.ByteTo_byte(datas);

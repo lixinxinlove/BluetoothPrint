@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.lxx.gprint">
 
-
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -21,7 +20,6 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <uses-feature android:name="android.hardware.usb.host" />
-
 
     <application
         android:allowBackup="true"
@@ -47,9 +45,9 @@
                 <action android:name="com.gprinter.aidl.GpPrintService" />
             </intent-filter>
         </service>
+        <service android:name="com.gprinter.service.AllService" />
 
-        <service android:name="com.gprinter.service.AllService"></service>
-
+        <activity android:name=".BluetoothListActivity"></activity>
     </application>
 
 </manifest>
